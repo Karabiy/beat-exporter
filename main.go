@@ -5,11 +5,12 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net"
 	"net/http"
 	"net/url"
 	"os"
+	"runtime"
 	"strings"
 	"time"
 
@@ -111,7 +112,20 @@ beatdiscovery:
 
 	// version metric
 	registry := prometheus.NewRegistry()
-	versionMetric := version.NewCollector(Name)
+	versionMetric := prometheus.NewGaugeFunc(
+		prometheus.GaugeOpts{
+			Namespace: Name,
+			Name:      "build_info",
+			Help:      fmt.Sprintf("A metric with a constant '1' value labeled by version, revision, branch, and goversion from which %s was built.", Name),
+			ConstLabels: prometheus.Labels{
+				"version":   version.Version,
+				"revision":  version.Revision,
+				"branch":    version.Branch,
+				"goversion": runtime.Version(),
+			},
+		},
+		func() float64 { return 1 },
+	)
 	mainCollector := collector.NewMainCollector(httpClient, beatURL, Name, beatInfo, *systemBeat)
 	registry.MustRegister(versionMetric)
 	registry.MustRegister(mainCollector)
@@ -183,7 +197,7 @@ func IndexHandler(metricsPath string) http.HandlerFunc {
 	index := []byte(fmt.Sprintf(strings.TrimSpace(indexHTML), metricsPath))
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Write(index)
+		_, _ = w.Write(index)
 	}
 }
 
@@ -201,7 +215,7 @@ func loadBeatType(client *http.Client, url url.URL) (*collector.BeatInfo, error)
 		return beatInfo, err
 	}
 
-	bodyBytes, err := ioutil.ReadAll(response.Body)
+	bodyBytes, err := io.ReadAll(response.Body)
 	if err != nil {
 		log.Error("Can't read body of response")
 		return beatInfo, err

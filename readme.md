@@ -1,64 +1,75 @@
-# beat-exporter for Prometheus ![](https://github.com/trustpilot/beat-exporter/workflows/test-and-build/badge.svg)
+# beat-exporter for Prometheus
 
-[![Docker Pulls](https://img.shields.io/docker/pulls/trustpilot/beat-exporter.svg?maxAge=604800)](https://hub.docker.com/r/trustpilot/beat-exporter/)
+> **Fork notice:** This is a fork of [trustpilot/beat-exporter](https://github.com/trustpilot/beat-exporter), modernized and updated for filebeat 8.17.4. This project is maintained on a best-effort basis for my own filebeat monitoring needs. It may not receive regular updates beyond that scope. If you're using this fork, feel free to open issues — I'll do my best to help.
 
+## What it does
 
-Exposes (file|metric)beat statistics from beats statistics endpoint to prometheus format, automaticly configuring collectors for apporiate beat type.
+Scrapes the filebeat HTTP stats endpoint and exposes metrics in Prometheus format.
 
-Current coverage
--
+## What changed from upstream
 
- * filebeat
- * metricbeat
- * packetbeat - _partial_
- * auditbeat - _partial_
+- Full metric coverage for the filebeat 8.17.4 `/stats` JSON payload (cgroup, handles, latency histograms, queue depth, etc.)
+- Go 1.26, updated dependencies (prometheus/client_golang, logrus)
+- Multi-stage Dockerfile, non-root runtime
+- arm64 build targets (linux, darwin, windows)
+- Modernized CI (GitHub Actions v4/v5, ghcr.io releases)
+- Removed deprecated APIs (`io/ioutil`, `// +build` tags, `GO111MODULE`)
 
-Setup
--
+## Supported beats
 
-Edit your *beat configuration and add following:
+- filebeat (primary focus)
+- metricbeat
+- auditbeat (partial)
 
+## Quick start
+
+### Docker Compose
+
+```bash
+docker compose up --build
 ```
+
+This starts filebeat, the exporter, and Prometheus. Metrics at `http://localhost:9479/metrics`, Prometheus UI at `http://localhost:9090`.
+
+### Standalone
+
+Enable the HTTP endpoint in your filebeat config:
+
+```yaml
 http:
   enabled: true
   host: localhost
   port: 5066
 ```
 
-This will expose `(file|metrics|*)beat` http endpoint at given port.
+Run the exporter:
 
-Run beat-exporter:
-```
-$ ./beat-exporter
-```
-
-beat-exported default port for prometheus is: `9479`
-
-Point your Prometheus to `0.0.0.0:9479/metrics`
-
-Configuration reference
--
-```
-$ ./beat-exporter -help
-Usage of ./beat-exporter:
-  -beat.system
-    	Expose system stats
-  -beat.timeout duration
-    	Timeout for trying to get stats from beat. (default 10s)
-  -beat.uri string
-    	HTTP API address of beat. (default "http://localhost:5066")
-  -tls.certfile string
-    	TLS certs file if you want to use tls instead of http
-  -tls.keyfile string
-    	TLS key file if you want to use tls instead of http
-  -version
-    	Show version and exit
-  -web.listen-address string
-    	Address to listen on for web interface and telemetry. (default ":9479")
-  -web.telemetry-path string
-    	Path under which to expose metrics. (default "/metrics")
+```bash
+./beat-exporter
 ```
 
-Contribution
--
-Please use pull requests, issues
+Metrics available at `http://localhost:9479/metrics`.
+
+## Configuration
+
+```
+./beat-exporter -help
+  -beat.uri string       HTTP API address of beat (default "http://localhost:5066")
+  -beat.timeout duration Timeout for beat stats (default 10s)
+  -beat.system           Expose system stats
+  -web.listen-address    Listen address (default ":9479")
+  -web.telemetry-path    Metrics path (default "/metrics")
+  -tls.certfile string   TLS cert file
+  -tls.keyfile string    TLS key file
+  -version               Show version
+```
+
+## Docker image
+
+```bash
+docker pull ghcr.io/karabiy/beat-exporter:latest
+```
+
+## Contributing
+
+Issues and PRs welcome.
