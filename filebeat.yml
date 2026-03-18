@@ -1,0 +1,12 @@
+filebeat.inputs:
+  - type: log
+    enabled: true
+    paths:
+      - /var/log/*.log
+
+http.enabled: true
+http.host: 0.0.0.0
+http.port: 5066
+
+output.console:
+  pretty: true

@@ -1,0 +1,25 @@
+services:
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:8.17.4
+    volumes:
+      - ./filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - /var/log:/var/log:ro
+    command: filebeat -e --strict.perms=false
+
+  beat-exporter:
+    build: .
+    ports:
+      - "9479:9479"
+    command:
+      - --beat.uri=http://filebeat:5066
+    depends_on:
+      - filebeat
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    depends_on:
+      - beat-exporter

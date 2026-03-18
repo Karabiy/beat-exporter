@@ -3,7 +3,7 @@ package collector
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -98,7 +98,7 @@ func (b *mainCollector) Collect(ch chan<- prometheus.Metric) {
 	err := b.fetchStatsEndpoint()
 	if err != nil {
 		ch <- prometheus.MustNewConstMetric(b.targetUp, prometheus.GaugeValue, float64(0)) // set target down
-		log.Errorf("Failed getting /stats endpoint of target: " + err.Error())
+		log.Errorf("Failed getting /stats endpoint of target: %s", err.Error())
 		return
 	}
 
@@ -138,7 +138,7 @@ func (b *mainCollector) fetchStatsEndpoint() error {
 
 	defer response.Body.Close()
 
-	bodyBytes, err := ioutil.ReadAll(response.Body)
+	bodyBytes, err := io.ReadAll(response.Body)
 	if err != nil {
 		log.Error("Can't read body of response")
 		return err
