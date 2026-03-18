@@ -22,13 +22,19 @@ LDFLAGS="-s -X github.com/prometheus/common/version.Version=${GITVERSION} \
 -X github.com/prometheus/common/version.BuildUser=${GITHUB_ACTOR} \
 -X github.com/prometheus/common/version.BuildDate=${TIME}"
 
-for OS in "darwin" "linux" "windows"; do
-    for ARCH in "amd64" "386" "arm64"; do 
-        echo "Building ${OS}/${ARCH} with version: ${GITVERSION}, revision: ${GITREVISION}, buildUser: ${GITHUB_ACTOR}"
-        if [[ $OS == "windows" ]]; then
-            CGO_ENABLED=0 GOOS=${OS} GOARCH=${ARCH} go build -ldflags "${LDFLAGS}" -tags 'netgo static_build' -a -o ".build/${OS}-${ARCH}/beat-exporter.exe"
-        else 
-            CGO_ENABLED=0 GOOS=${OS} GOARCH=${ARCH} go build -ldflags "${LDFLAGS}" -tags 'netgo static_build' -a -o ".build/${OS}-${ARCH}/beat-exporter"
-        fi
-    done
-done
+build() {
+    local OS=$1 ARCH=$2
+    echo "Building ${OS}/${ARCH} with version: ${GITVERSION}, revision: ${GITREVISION}, buildUser: ${GITHUB_ACTOR}"
+    local EXT=""
+    if [[ $OS == "windows" ]]; then EXT=".exe"; fi
+    CGO_ENABLED=0 GOOS=${OS} GOARCH=${ARCH} go build -ldflags "${LDFLAGS}" -tags 'netgo static_build' -a -o ".build/${OS}-${ARCH}/beat-exporter${EXT}"
+}
+
+# darwin: 386 dropped in Go 1.15
+for ARCH in "amd64" "arm64"; do build darwin "$ARCH"; done
+
+# linux: all three
+for ARCH in "amd64" "386" "arm64"; do build linux "$ARCH"; done
+
+# windows: 386 dropped in recent Go
+for ARCH in "amd64" "arm64"; do build windows "$ARCH"; done
