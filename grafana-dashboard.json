@@ -1,0 +1,447 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_PROMETHEUS",
+      "label": "Prometheus",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "prometheus",
+      "pluginName": "Prometheus"
+    }
+  ],
+  "__requires": [
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "10.0.0"
+    },
+    {
+      "type": "datasource",
+      "id": "prometheus",
+      "name": "Prometheus",
+      "version": "1.0.0"
+    },
+    {
+      "type": "panel",
+      "id": "timeseries",
+      "name": "Time series",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "stat",
+      "name": "Stat",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "gauge",
+      "name": "Gauge",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "table",
+      "name": "Table",
+      "version": ""
+    }
+  ],
+  "id": null,
+  "uid": "beat-exporter-dashboard",
+  "title": "Beat Exporter - Filebeat",
+  "description": "Dashboard for monitoring Filebeat via beat_exporter Prometheus metrics",
+  "tags": ["filebeat", "beat-exporter", "prometheus"],
+  "timezone": "browser",
+  "editable": true,
+  "graphTooltip": 1,
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "refresh": "30s",
+  "templating": {
+    "list": [
+      {
+        "name": "datasource",
+        "type": "datasource",
+        "query": "prometheus",
+        "current": {},
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "options": [],
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false
+      },
+      {
+        "name": "instance",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "${datasource}" },
+        "query": "label_values(filebeat_up, instance)",
+        "current": {},
+        "hide": 0,
+        "includeAll": true,
+        "multi": true,
+        "options": [],
+        "refresh": 2,
+        "regex": "",
+        "sort": 1
+      }
+    ]
+  },
+  "panels": [
+    {
+      "title": "Overview",
+      "type": "row",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "collapsed": false
+    },
+    {
+      "title": "Target Up",
+      "type": "stat",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 4, "w": 3, "x": 0, "y": 1 },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "type": "value", "options": { "0": { "text": "DOWN", "color": "red" }, "1": { "text": "UP", "color": "green" } } }
+          ],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] }
+        },
+        "overrides": []
+      },
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [{ "expr": "filebeat_up{instance=~\"$instance\"}", "legendFormat": "{{instance}}" }]
+    },
+    {
+      "title": "Beat Version",
+      "type": "stat",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 4, "w": 4, "x": 3, "y": 1 },
+      "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] } }, "overrides": [] },
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] }, "textMode": "name" },
+      "targets": [{ "expr": "filebeat_info{instance=~\"$instance\"}", "legendFormat": "{{version}}" }]
+    },
+    {
+      "title": "Uptime",
+      "type": "stat",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 4, "w": 4, "x": 7, "y": 1 },
+      "fieldConfig": { "defaults": { "unit": "s", "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] } }, "overrides": [] },
+      "options": { "colorMode": "value", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [{ "expr": "filebeat_uptime_seconds_total{instance=~\"$instance\"}", "legendFormat": "{{instance}}" }]
+    },
+    {
+      "title": "Goroutines",
+      "type": "stat",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 4, "w": 3, "x": 11, "y": 1 },
+      "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 100 }, { "color": "red", "value": 200 }] } }, "overrides": [] },
+      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [{ "expr": "filebeat_runtime_goroutines{instance=~\"$instance\"}", "legendFormat": "{{instance}}" }]
+    },
+    {
+      "title": "Open File Handles",
+      "type": "stat",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 4, "w": 3, "x": 14, "y": 1 },
+      "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 500 }, { "color": "red", "value": 900 }] } }, "overrides": [] },
+      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [{ "expr": "filebeat_handles_open{instance=~\"$instance\"}", "legendFormat": "{{instance}}" }]
+    },
+    {
+      "title": "Pipeline Clients",
+      "type": "stat",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 4, "w": 3, "x": 17, "y": 1 },
+      "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] } }, "overrides": [] },
+      "options": { "colorMode": "value", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [{ "expr": "filebeat_libbeat_pipeline_clients{instance=~\"$instance\"}", "legendFormat": "{{instance}}" }]
+    },
+    {
+      "title": "Exporter Build Info",
+      "type": "table",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 4, "w": 4, "x": 20, "y": 1 },
+      "fieldConfig": { "defaults": {}, "overrides": [{ "matcher": { "id": "byName", "options": "Value" }, "properties": [{ "id": "custom.hidden", "value": true }] }, { "matcher": { "id": "byName", "options": "Time" }, "properties": [{ "id": "custom.hidden", "value": true }] }] },
+      "options": { "showHeader": true, "footer": { "show": false } },
+      "transformations": [{ "id": "labelsToFields", "options": {} }],
+      "targets": [{ "expr": "beat_exporter_build_info", "legendFormat": "", "format": "table", "instant": true }]
+    },
+    {
+      "title": "Filebeat Events & Harvester",
+      "type": "row",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
+      "collapsed": false
+    },
+    {
+      "title": "Filebeat Events",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 6 },
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 10, "pointSize": 5, "showPoints": "auto" } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull"] }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "filebeat_filebeat_events{instance=~\"$instance\", event=\"active\"}", "legendFormat": "Active" },
+        { "expr": "filebeat_filebeat_events{instance=~\"$instance\", event=\"added\"}", "legendFormat": "Added" },
+        { "expr": "filebeat_filebeat_events{instance=~\"$instance\", event=\"done\"}", "legendFormat": "Done" }
+      ]
+    },
+    {
+      "title": "Harvester Status",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 6 },
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 10 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull"] }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "filebeat_filebeat_harvester{instance=~\"$instance\", harvester=\"open_files\"}", "legendFormat": "Open Files" },
+        { "expr": "filebeat_filebeat_harvester{instance=~\"$instance\", harvester=\"running\"}", "legendFormat": "Running" },
+        { "expr": "filebeat_filebeat_harvester{instance=~\"$instance\", harvester=\"started\"}", "legendFormat": "Started" },
+        { "expr": "filebeat_filebeat_harvester{instance=~\"$instance\", harvester=\"closed\"}", "legendFormat": "Closed" },
+        { "expr": "filebeat_filebeat_harvester{instance=~\"$instance\", harvester=\"skipped\"}", "legendFormat": "Skipped" }
+      ]
+    },
+    {
+      "title": "Registrar States",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 6 },
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 10 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull"] }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "filebeat_registrar_states{instance=~\"$instance\", state=\"current\"}", "legendFormat": "Current" },
+        { "expr": "filebeat_registrar_states{instance=~\"$instance\", state=\"update\"}", "legendFormat": "Update" },
+        { "expr": "filebeat_registrar_states{instance=~\"$instance\", state=\"cleanup\"}", "legendFormat": "Cleanup" }
+      ]
+    },
+    {
+      "title": "Libbeat Output",
+      "type": "row",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 14 },
+      "collapsed": false
+    },
+    {
+      "title": "Output Events",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 15 },
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 10 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull"] }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "filebeat_libbeat_output_events{instance=~\"$instance\", type=\"acked\"}", "legendFormat": "Acked" },
+        { "expr": "filebeat_libbeat_output_events{instance=~\"$instance\", type=\"active\"}", "legendFormat": "Active" },
+        { "expr": "filebeat_libbeat_output_events{instance=~\"$instance\", type=\"total\"}", "legendFormat": "Total" },
+        { "expr": "filebeat_libbeat_output_events{instance=~\"$instance\", type=\"failed\"}", "legendFormat": "Failed" },
+        { "expr": "filebeat_libbeat_output_events{instance=~\"$instance\", type=\"dropped\"}", "legendFormat": "Dropped" },
+        { "expr": "filebeat_libbeat_output_events{instance=~\"$instance\", type=\"dead_letter\"}", "legendFormat": "Dead Letter" }
+      ]
+    },
+    {
+      "title": "Output Errors & Batches",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 6, "x": 12, "y": 15 },
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 10 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull"] }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "rate(filebeat_libbeat_output_errors_total{instance=~\"$instance\"}[5m])", "legendFormat": "Output Errors/s" },
+        { "expr": "rate(filebeat_libbeat_output_read_errors_total{instance=~\"$instance\"}[5m])", "legendFormat": "Read Errors/s" },
+        { "expr": "rate(filebeat_libbeat_output_write_errors_total{instance=~\"$instance\"}[5m])", "legendFormat": "Write Errors/s" },
+        { "expr": "rate(filebeat_libbeat_output_batches_split_total{instance=~\"$instance\"}[5m])", "legendFormat": "Batches Split/s" }
+      ]
+    },
+    {
+      "title": "Output Bytes Rate",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 6, "x": 18, "y": 15 },
+      "fieldConfig": { "defaults": { "unit": "Bps", "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 20 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull"] }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "rate(filebeat_libbeat_output_write_bytes_total{instance=~\"$instance\"}[5m])", "legendFormat": "Write B/s" },
+        { "expr": "rate(filebeat_libbeat_output_read_bytes_total{instance=~\"$instance\"}[5m])", "legendFormat": "Read B/s" }
+      ]
+    },
+    {
+      "title": "Libbeat Pipeline",
+      "type": "row",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 23 },
+      "collapsed": false
+    },
+    {
+      "title": "Pipeline Events",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 },
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 10 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull"] }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "filebeat_libbeat_pipeline_events{instance=~\"$instance\", type=\"published\"}", "legendFormat": "Published" },
+        { "expr": "filebeat_libbeat_pipeline_events{instance=~\"$instance\", type=\"total\"}", "legendFormat": "Total" },
+        { "expr": "filebeat_libbeat_pipeline_events{instance=~\"$instance\", type=\"active\"}", "legendFormat": "Active" },
+        { "expr": "filebeat_libbeat_pipeline_events{instance=~\"$instance\", type=\"filtered\"}", "legendFormat": "Filtered" },
+        { "expr": "filebeat_libbeat_pipeline_events{instance=~\"$instance\", type=\"dropped\"}", "legendFormat": "Dropped" },
+        { "expr": "filebeat_libbeat_pipeline_events{instance=~\"$instance\", type=\"failed\"}", "legendFormat": "Failed" },
+        { "expr": "filebeat_libbeat_pipeline_events{instance=~\"$instance\", type=\"retry\"}", "legendFormat": "Retry" }
+      ]
+    },
+    {
+      "title": "Queue Fill Level",
+      "type": "gauge",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 4, "x": 12, "y": 24 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0, "max": 1,
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 0.7 }, { "color": "red", "value": 0.9 }] }
+        },
+        "overrides": []
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [{ "expr": "filebeat_libbeat_pipeline_queue_filled_pct{instance=~\"$instance\"}", "legendFormat": "{{instance}}" }]
+    },
+    {
+      "title": "Queue Events",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 24 },
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 10 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull"] }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "filebeat_libbeat_pipeline_queue_filled_events{instance=~\"$instance\"}", "legendFormat": "Filled" },
+        { "expr": "filebeat_libbeat_pipeline_queue_max_events{instance=~\"$instance\"}", "legendFormat": "Max" },
+        { "expr": "rate(filebeat_libbeat_pipeline_queue_added_events_total{instance=~\"$instance\"}[5m])", "legendFormat": "Added/s" },
+        { "expr": "rate(filebeat_libbeat_pipeline_queue_consumed_events_total{instance=~\"$instance\"}[5m])", "legendFormat": "Consumed/s" },
+        { "expr": "rate(filebeat_libbeat_pipeline_queue_removed_events_total{instance=~\"$instance\"}[5m])", "legendFormat": "Removed/s" }
+      ]
+    },
+    {
+      "title": "CPU & Memory",
+      "type": "row",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 32 },
+      "collapsed": false
+    },
+    {
+      "title": "CPU Time Rate",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 33 },
+      "fieldConfig": { "defaults": { "unit": "s", "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 20, "stacking": { "mode": "normal" } } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull"] }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "rate(filebeat_cpu_time_seconds_total{instance=~\"$instance\", mode=\"user\"}[5m])", "legendFormat": "User" },
+        { "expr": "rate(filebeat_cpu_time_seconds_total{instance=~\"$instance\", mode=\"system\"}[5m])", "legendFormat": "System" }
+      ]
+    },
+    {
+      "title": "Memory Usage",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 33 },
+      "fieldConfig": { "defaults": { "unit": "bytes", "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 10 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull"] }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "filebeat_memstats_rss{instance=~\"$instance\"}", "legendFormat": "RSS" },
+        { "expr": "filebeat_memstats_memory{instance=~\"$instance\"}", "legendFormat": "Total" },
+        { "expr": "filebeat_memstats_memory_alloc{instance=~\"$instance\"}", "legendFormat": "Alloc" },
+        { "expr": "filebeat_memstats_memory_sys{instance=~\"$instance\"}", "legendFormat": "Sys" }
+      ]
+    },
+    {
+      "title": "Cgroup Memory",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 33 },
+      "fieldConfig": { "defaults": { "unit": "bytes", "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 10 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull"] }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "filebeat_cgroup_memory_usage_bytes{instance=~\"$instance\"}", "legendFormat": "Usage" },
+        { "expr": "filebeat_cgroup_memory_limit_bytes{instance=~\"$instance\"}", "legendFormat": "Limit" }
+      ]
+    },
+    {
+      "title": "Cgroup CPU & Write Latency",
+      "type": "row",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 41 },
+      "collapsed": false
+    },
+    {
+      "title": "Cgroup CPU Throttling",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 42 },
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 10 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull"] }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "rate(filebeat_cgroup_cpu_stats_periods_total{instance=~\"$instance\"}[5m])", "legendFormat": "Periods/s" },
+        { "expr": "rate(filebeat_cgroup_cpu_throttled_periods_total{instance=~\"$instance\"}[5m])", "legendFormat": "Throttled Periods/s" },
+        { "expr": "rate(filebeat_cgroup_cpu_throttled_nanoseconds_total{instance=~\"$instance\"}[5m]) / 1e9", "legendFormat": "Throttled Seconds/s" }
+      ]
+    },
+    {
+      "title": "Cgroup CPU Acct",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 42 },
+      "fieldConfig": { "defaults": { "unit": "s", "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 20 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull"] }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "rate(filebeat_cgroup_cpuacct_nanoseconds_total{instance=~\"$instance\"}[5m]) / 1e9", "legendFormat": "CPU Seconds/s" }
+      ]
+    },
+    {
+      "title": "Output Write Latency",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 42 },
+      "fieldConfig": { "defaults": { "unit": "ms", "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 10 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull"] }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "filebeat_libbeat_output_write_latency{instance=~\"$instance\", quantile=\"0.75\"}", "legendFormat": "p75" },
+        { "expr": "filebeat_libbeat_output_write_latency{instance=~\"$instance\", quantile=\"0.95\"}", "legendFormat": "p95" },
+        { "expr": "filebeat_libbeat_output_write_latency{instance=~\"$instance\", quantile=\"0.99\"}", "legendFormat": "p99" },
+        { "expr": "filebeat_libbeat_output_write_latency_mean{instance=~\"$instance\"}", "legendFormat": "Mean" },
+        { "expr": "filebeat_libbeat_output_write_latency_max{instance=~\"$instance\"}", "legendFormat": "Max" }
+      ]
+    },
+    {
+      "title": "Auditd",
+      "type": "row",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 50 },
+      "collapsed": false
+    },
+    {
+      "title": "Auditd Metrics",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 51 },
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 10 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull"] }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "filebeat_auditd_kernel_lost{instance=~\"$instance\"}", "legendFormat": "Kernel Lost" },
+        { "expr": "filebeat_auditd_userspace_lost{instance=~\"$instance\"}", "legendFormat": "Userspace Lost" },
+        { "expr": "filebeat_auditd_received_msgs{instance=~\"$instance\"}", "legendFormat": "Received Msgs" },
+        { "expr": "filebeat_auditd_reassembler_seq_gaps{instance=~\"$instance\"}", "legendFormat": "Seq Gaps" }
+      ]
+    },
+    {
+      "title": "Registrar Writes",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 51 },
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 10 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull"] }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "filebeat_registrar_writes{instance=~\"$instance\", writes=\"total\"}", "legendFormat": "Total" },
+        { "expr": "filebeat_registrar_writes{instance=~\"$instance\", writes=\"success\"}", "legendFormat": "Success" },
+        { "expr": "filebeat_registrar_writes{instance=~\"$instance\", writes=\"fail\"}", "legendFormat": "Fail" }
+      ]
+    }
+  ],
+  "schemaVersion": 39,
+  "version": 1
+}
